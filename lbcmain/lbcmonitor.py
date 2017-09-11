@@ -2,9 +2,10 @@ from lbcapi import api
 from openpyxl import Workbook
 from openpyxl import load_workbook
 import os.path
-import urlparse, json, sched, threading, time, pip
+import urlparse, json, sched, threading, time, pip, os
 
-with open('../keys.json') as f:
+path = os.getcwd()
+with open('./keys.json') as f:
     keys = json.load(f)
 hmac_key = keys["READ"]["key"]
 hmac_secret = keys["READ"]["secret"]
@@ -70,7 +71,7 @@ def add_to_xlsx(file_name, items):
         file_name: The file name to be created
         items: Include info of every columns
     """
-    file_path = '../' + file_name
+    file_path = './' + file_name
     if os.path.isfile(file_path):
         wb = load_workbook(file_path)
     else:
