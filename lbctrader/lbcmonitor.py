@@ -11,28 +11,51 @@ hmac_secret = keys["READ"]["secret"]
 conn = api.hmac(hmac_key, hmac_secret)
 
 def get_public_ads(conn, sellorbuy, currency, method):
+    """Get public ads by connection
+
+    Args:
+        conn: Connection returned by api.hmac
+        sellorbuy: string 'sell' or 'buy'
+        currency: string of currency, example: 'CNY', 'USD'
+        method: string of payment method, example: 'paypal', 'alipay'
+
+    Returns:
+        A dictionary responsed by server
+    """
     json_response = conn.call('GET', '/' + sellorbuy + '-bitcoins-online/' + currency + '/' + method + '/.json').json()
     return json_response['data']['ad_list']
 
 def get_first_ad(ads):
+    """Get the first ad
+
+    Args: 
+        ads: Ads dictionary server returned
+
+    Returns: 
+        The first ad, always the best
+    """
     return ads[1]['data']
 
 def get_max_value(ad1, ad2):
+    """Get the ad with max price"""
     if float(ad1['temp_price']) > float(ad2['temp_price']):
         return ad1
     else:
         return ad2
 
 def get_min_value(ad1, ad2):
+    """Get the ad with min price"""
     if float(ad1['temp_price']) < float(ad2['temp_price']):
         return ad1
     else:
         return ad2
 
 def usd_best_ad(conn, sellorbuy):
+    """Return best ad in USD"""
     return get_first_ad(get_public_ads(conn, sellorbuy, 'USD', 'paypal'))
 
 def cny_best_ad(conn, sellorbuy):
+    """Return best ad in CNY"""
     cny_sell_ad_wechat = get_first_ad(get_public_ads(conn, sellorbuy, 'CNY', 'wechat'))
     cny_sell_ad_alipay = get_first_ad(get_public_ads(conn, sellorbuy, 'CNY', 'alipay'))
     if sellorbuy == 'sell':
@@ -41,6 +64,12 @@ def cny_best_ad(conn, sellorbuy):
         return get_min_value(cny_sell_ad_wechat, cny_sell_ad_alipay)
 
 def add_to_xlsx(file_name, items):
+    """Add a dictionary to the last row in xlsm
+
+    Args:
+        file_name: The file name to be created
+        items: Include info of every columns
+    """
     file_path = '../' + file_name
     if os.path.isfile(file_path):
         wb = load_workbook(file_path)
@@ -65,6 +94,7 @@ def add_to_xlsx(file_name, items):
     wb.close()
 
 def check_value():
+    """The main loop"""
     usd_sell_ad = usd_best_ad(conn, 'sell')
     cny_sell_ad = cny_best_ad(conn, 'sell')
     cny_buy_ad = cny_best_ad(conn, 'buy')
