@@ -100,5 +100,7 @@ ENV/
 # mypy
 .mypy_cache/
 
-# keys files
+# personal stuff
 keys.json
+*.xlsx
+.vs/
