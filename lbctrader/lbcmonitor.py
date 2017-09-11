@@ -55,7 +55,7 @@ def add_to_xlsx(file_name, items):
     ws = wb.active
     row = ws.max_row + 1
     ws['a'+ str(row)] = time.ctime()
-    ws['b'+ str(row)] = items['USD','sell','price']
+    ws['b'+ str(row)] = items['USD']['sell']['price']
     ws['c'+ str(row)] = items['USD']['sell']['max_amount']
     ws['d'+ str(row)] = items['CNY']['sell']['price']
     ws['e'+ str(row)] = items['CNY']['sell']['max_amount']
