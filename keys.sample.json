@@ -1,0 +1,18 @@
+{
+    "READ":{
+        "key":"your_hmac_key_as_string",
+        "secret":"your_hmac_secret_as_string"
+    },
+    "WRITE":{
+        "key":"",
+        "secret":""
+    },
+    "MONEY":{
+        "key":"",
+        "secret":""
+    },
+    "MONEY_PIN":{
+        "key":"",
+        "secret":""
+    }
+}
