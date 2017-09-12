@@ -23,6 +23,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="lbcmain\lbcmonitor.py" />
+    <Compile Include="lbcmain\mailntf.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="lbcmain\__init__.py" />
     <Compile Include="main.py" />
   </ItemGroup>
