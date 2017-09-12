@@ -1,12 +1,12 @@
 from lbcapi import api
 from openpyxl import Workbook
 from openpyxl import load_workbook
-import os.path
-import urlparse, json, sched, threading, time, pip, os
+import json, threading, time, os
 
 class Monitor:
+    """Monitor is a basic class dealing with connection and loop"""
     def __init__(self):
-        path = os.getcwd()
+        """Establish connection using keys.json file"""
         with open('./keys.json') as f:
             keys = json.load(f)
         self.__hmac_key = keys["READ"]["key"]
@@ -133,6 +133,7 @@ class Monitor:
         self.check_value()
 
 class NoDataException(Exception):
+    """NoDataException raises if lbcapi returned an error data"""
     def __init__(self, message):
         self.message = message
     def __str__(self):
