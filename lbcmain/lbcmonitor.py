@@ -26,7 +26,10 @@ class Monitor:
             A dictionary responsed by server
         """
         json_response = self.__conn.call('GET', '/' + sellorbuy + '-bitcoins-online/' + currency + '/' + method + '/.json').json()
-        return json_response['data']['ad_list']
+        try:
+            return json_response['data']['ad_list']
+        except:
+            raise NoDataException(json_response['error']['message'])
 
     @staticmethod
     def get_first_ad(ads):
@@ -102,24 +105,35 @@ class Monitor:
 
     def check_value(self):
         """The main loop"""
-        usd_sell_ad = self.usd_best_ad('sell')
-        cny_sell_ad = self.cny_best_ad('sell')
-        cny_buy_ad = self.cny_best_ad( 'buy')
-        print "@time:", time.ctime()
-        print "USD sell:", usd_sell_ad['temp_price'], "max value:", usd_sell_ad['max_amount_available']
-        print "CNY sell:", cny_sell_ad['temp_price'], "max value:", cny_sell_ad['max_amount_available']
-        print "CNY buy:", cny_buy_ad['temp_price'], "max value:", cny_buy_ad['max_amount_available']
-        items = {'USD':
-                 {'sell':
-                  {'price':float(usd_sell_ad['temp_price']),'max_amount':int(usd_sell_ad['max_amount_available'])}},
-                 'CNY':
-                 {'sell':
-                  {'price':float(cny_sell_ad['temp_price']),'max_amount':int(cny_sell_ad['max_amount_available'])},
-                  'buy':
-                  {'price':float(cny_buy_ad['temp_price']),'max_amount':int(cny_buy_ad['max_amount_available'])}}}
-        self.add_to_xlsx("output.xlsx",items)
-        threading.Timer(60.0, self.check_value).start()
+        try:
+            usd_sell_ad = self.usd_best_ad('sell')
+            cny_sell_ad = self.cny_best_ad('sell')
+            cny_buy_ad = self.cny_best_ad( 'buy')
+            print "@time:", time.ctime()
+            print "USD sell:", usd_sell_ad['temp_price'], "max value:", usd_sell_ad['max_amount_available']
+            print "CNY sell:", cny_sell_ad['temp_price'], "max value:", cny_sell_ad['max_amount_available']
+            print "CNY buy:", cny_buy_ad['temp_price'], "max value:", cny_buy_ad['max_amount_available']
+            items = {'USD':
+                     {'sell':
+                      {'price':float(usd_sell_ad['temp_price']),'max_amount':int(usd_sell_ad['max_amount_available'])}},
+                     'CNY':
+                     {'sell':
+                      {'price':float(cny_sell_ad['temp_price']),'max_amount':int(cny_sell_ad['max_amount_available'])},
+                      'buy':
+                      {'price':float(cny_buy_ad['temp_price']),'max_amount':int(cny_buy_ad['max_amount_available'])}}}
+            self.add_to_xlsx("output.xlsx",items)
+        except NoDataException as e:
+            print "Exception:", e.message
+        finally:
+            threading.Timer(60.0, self.check_value).start()
+        
 
     def start(self):
         """Start the main loop"""
         self.check_value()
+
+class NoDataException(Exception):
+    def __init__(self, message):
+        self.message = message
+    def __str__(self):
+        return repr(self.message)
