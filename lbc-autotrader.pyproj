@@ -26,8 +26,14 @@
     <Compile Include="lbcmain\mailntf.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="lbcmain\xlsxproc.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="lbcmain\__init__.py" />
     <Compile Include="main.py" />
+    <Compile Include="test.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="lbcmain" />

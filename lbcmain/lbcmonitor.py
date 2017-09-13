@@ -1,10 +1,9 @@
 from lbcapi import api
-from openpyxl import Workbook
-from openpyxl import load_workbook
+from xlsxproc import XlsxProcessor
 import json, threading, time, os
 
 class Monitor:
-    """Monitor is a basic class dealing with connection and loop"""
+    """Monitor deal with connection and loop"""
     def __init__(self):
         """Establish connection using keys.json file"""
         with open('./keys.json') as f:
@@ -72,37 +71,6 @@ class Monitor:
         else:
             return self.get_min_value(cny_sell_ad_wechat, cny_sell_ad_alipay)
 
-    @staticmethod
-    def add_to_xlsx(file_name, items):
-        """Add a dictionary to the last row in xlsm
-
-        Args:
-            file_name: The file name to be created
-            items: Include info of every columns
-        """
-        file_path = './' + file_name
-        if os.path.isfile(file_path):
-            wb = load_workbook(file_path)
-        else:
-            wb = Workbook()
-            ws = wb.active
-            ws['a1'] = 'Time'
-            ws['b1'] = 'USD-sell price'
-            ws['c1'] = ws['e1'] = ws['g1'] = 'amount'
-            ws['d1'] = 'CNY-sell price'
-            ws['f1'] = 'CNY-buy price'
-        ws = wb.active
-        row = ws.max_row + 1
-        ws['a'+ str(row)] = time.ctime()
-        ws['b'+ str(row)] = items['USD']['sell']['price']
-        ws['c'+ str(row)] = items['USD']['sell']['max_amount']
-        ws['d'+ str(row)] = items['CNY']['sell']['price']
-        ws['e'+ str(row)] = items['CNY']['sell']['max_amount']
-        ws['f'+ str(row)] = items['CNY']['buy']['price']
-        ws['g'+ str(row)] = items['CNY']['buy']['max_amount']
-        wb.save(file_path)
-        wb.close()
-
     def check_value(self):
         """The main loop"""
         try:
@@ -121,7 +89,9 @@ class Monitor:
                       {'price':float(cny_sell_ad['temp_price']),'max_amount':int(cny_sell_ad['max_amount_available'])},
                       'buy':
                       {'price':float(cny_buy_ad['temp_price']),'max_amount':int(cny_buy_ad['max_amount_available'])}}}
-            self.add_to_xlsx("output.xlsx",items)
+            with XlsxProcessor() as xlsm:
+                xlsm.add_to_xlsx(items)
+
         except NoDataException as e:
             print "Exception:", e.message
         finally:
@@ -133,7 +103,7 @@ class Monitor:
         self.check_value()
 
 class NoDataException(Exception):
-    """NoDataException raises if lbcapi returned an error data"""
+    """NoDataException raised if lbcapi returned an error data"""
     def __init__(self, message):
         self.message = message
     def __str__(self):
