@@ -1,3 +1,8 @@
-import time
-print ord('a')
-print str(chr(97+1))
+import datetime, platform
+from lbcmain.mailntf import MailBuilder, MailType
+
+mail = MailBuilder(type = MailType.REPORT)
+mail.build_body()
+mail.send()
+
+print platform.system()

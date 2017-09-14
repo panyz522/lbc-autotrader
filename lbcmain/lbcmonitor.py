@@ -1,6 +1,7 @@
 from lbcapi import api
 from xlsxproc import XlsxProcessor
-import json, threading, time, os
+from mailntf import MailBuilder, MailType
+import json, threading, time, os, datetime
 
 class Monitor:
     """Monitor deal with connection and loop"""
@@ -11,6 +12,12 @@ class Monitor:
         self.__hmac_key = keys["READ"]["key"]
         self.__hmac_secret = keys["READ"]["secret"]
         self.__conn = api.hmac(self.__hmac_key, self.__hmac_secret)
+        # Set email notification time
+        now = datetime.datetime.now()
+        if now.hour >= 22:
+            self.next_report_time = (now + datetime.timedelta(days = 1)).replace(hour = 22, minute = 0, second = 0, microsecond = 0)
+        else:
+            self.next_report_time = now.replace(hour = 22, minute = 0, second = 0, microsecond = 0)
 
     def get_public_ads(self, sellorbuy, currency, method):
         """Get public ads by connection
@@ -92,10 +99,15 @@ class Monitor:
             with XlsxProcessor() as xlsm:
                 xlsm.add_to_xlsx(items)
 
+            if datetime.datetime.now() >= self.next_report_time:
+                mail = MailBuilder(type = MailType.REPORT)
+                mail.build_body()
+                mail.send()
+
         except NoDataException as e:
             print "Exception:", e.message
         finally:
-            threading.Timer(60.0, self.check_value).start()
+            threading.Timer(600, self.check_value).start()
         
 
     def start(self):

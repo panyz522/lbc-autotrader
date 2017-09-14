@@ -20,6 +20,7 @@ class XlsxProcessor(object):
             self.ws['f1'] = 'CNY-buy price'
         self.ws = self.wb.active
         self.row = self.ws.max_row + 1
+        self.crt_col = 1
 
     def __enter__(self):
         return self
@@ -34,17 +35,17 @@ class XlsxProcessor(object):
         Args:
             items: Include info of every columns
         """
-        self.crt_col = 1
-        self.add_and_next("=DATEVALUE(AA" + str(self.row) + ")+TIMEVALUE(AA" + str(self.row) + ")")
-        self.add_and_next(items['USD']['sell']['price'])
-        self.add_and_next(items['USD']['sell']['max_amount'])
-        self.add_and_next(items['CNY']['sell']['price'])
-        self.add_and_next(items['CNY']['sell']['max_amount'])
-        self.add_and_next(items['CNY']['buy']['price'])
-        self.add_and_next(items['CNY']['buy']['max_amount'])
+        self.write("=DATEVALUE(AA" + str(self.row) + ")+TIMEVALUE(AA" + str(self.row) + ")")
+        self.write(items['USD']['sell']['price'],
+                   items['USD']['sell']['max_amount'],
+                   items['CNY']['sell']['price'],
+                   items['CNY']['sell']['max_amount'],
+                   items['CNY']['buy']['price'],
+                   items['CNY']['buy']['max_amount'])
         self.crt_col = 27
-        self.add_and_next(time.strftime("%Y/%m/%d %H:%M:%S"))
+        self.write(time.strftime("%Y/%m/%d %H:%M:%S"))
 
-    def add_and_next(self, item):
-        self.ws.cell(row = self.row, column = self.crt_col, value = item)
-        self.crt_col += 1
+    def write(self, *items):
+        for item in items:
+            self.ws.cell(row = self.row, column = self.crt_col, value = item)
+            self.crt_col += 1
