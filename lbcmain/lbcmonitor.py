@@ -1,7 +1,7 @@
 from lbcapi import api
 from xlsxproc import XlsxProcessor
 from mailntf import MailBuilder, MailType
-import json, threading, time, os, datetime
+import json, threading, time, os, datetime, pytz
 
 class Monitor:
     """Monitor deal with connection and loop"""
@@ -13,11 +13,16 @@ class Monitor:
         self.__hmac_secret = keys["READ"]["secret"]
         self.__conn = api.hmac(self.__hmac_key, self.__hmac_secret)
         # Set email notification time
-        now = datetime.datetime.now()
-        if now.hour >= 22:
-            self.next_report_time = (now + datetime.timedelta(days = 1)).replace(hour = 22, minute = 0, second = 0, microsecond = 0)
+        self.set_reporttime()
+
+    def set_reporttime(self, hour = 22, minute = 0, tmz = 'Asia/Shanghai'):
+        dt_bj = datetime.datetime(2017, 1, 1, hour, minute, tzinfo = pytz.timezone(tmz))
+        dt_now = datetime.datetime.utcnow()
+        dt_utc = datetime.datetime.combine(dt_now.date(), dt_bj.astimezone(pytz.utc).time())
+        if dt_now >= dt_utc:
+            self.report_time = dt_utc + datetime.timedelta(days = 1)
         else:
-            self.next_report_time = now.replace(hour = 22, minute = 0, second = 0, microsecond = 0)
+            self.report_time = dt_utc
 
     def get_public_ads(self, sellorbuy, currency, method):
         """Get public ads by connection
@@ -84,10 +89,8 @@ class Monitor:
             usd_sell_ad = self.usd_best_ad('sell')
             cny_sell_ad = self.cny_best_ad('sell')
             cny_buy_ad = self.cny_best_ad( 'buy')
-            print "@time:", time.ctime()
-            print "USD sell:", usd_sell_ad['temp_price'], "max value:", usd_sell_ad['max_amount_available']
-            print "CNY sell:", cny_sell_ad['temp_price'], "max value:", cny_sell_ad['max_amount_available']
-            print "CNY buy:", cny_buy_ad['temp_price'], "max value:", cny_buy_ad['max_amount_available']
+            print "@time:", datetime.datetime.utcnow()
+            print "USD sell:", usd_sell_ad['temp_price'], "max value:", usd_sell_ad['max_amount_available'], "CNY sell:", cny_sell_ad['temp_price'], "max value:", cny_sell_ad['max_amount_available'], "CNY buy:", cny_buy_ad['temp_price'],"max value:", cny_buy_ad['max_amount_available']
             items = {'USD':
                      {'sell':
                       {'price':float(usd_sell_ad['temp_price']),'max_amount':int(usd_sell_ad['max_amount_available'])}},
@@ -99,15 +102,16 @@ class Monitor:
             with XlsxProcessor() as xlsm:
                 xlsm.add_to_xlsx(items)
 
-            if datetime.datetime.now() >= self.next_report_time:
+            if datetime.datetime.utcnow() >= self.report_time:
                 mail = MailBuilder(type = MailType.REPORT)
+                self.report_time = self.report_time + datetime.timedelta(days = 1)
                 mail.build_body()
                 mail.send()
 
         except NoDataException as e:
             print "Exception:", e.message
         finally:
-            threading.Timer(600, self.check_value).start()
+            threading.Timer(20, self.check_value).start()
         
 
     def start(self):

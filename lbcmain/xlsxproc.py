@@ -1,4 +1,4 @@
-import os, time
+import os, datetime
 from openpyxl import Workbook
 from openpyxl import load_workbook
 from openpyxl.worksheet import Worksheet
@@ -43,7 +43,7 @@ class XlsxProcessor(object):
                    items['CNY']['buy']['price'],
                    items['CNY']['buy']['max_amount'])
         self.crt_col = 27
-        self.write(time.strftime("%Y/%m/%d %H:%M:%S"))
+        self.write(datetime.datetime.utcnow().strftime("%Y/%m/%d %H:%M:%S"))
 
     def write(self, *items):
         for item in items:
