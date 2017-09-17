@@ -89,8 +89,10 @@ class Monitor:
             usd_sell_ad = self.usd_best_ad('sell')
             cny_sell_ad = self.cny_best_ad('sell')
             cny_buy_ad = self.cny_best_ad( 'buy')
+            c2u = self.get_rate(float(cny_buy_ad['temp_price']), float(usd_sell_ad['temp_price']))
+            c2u_net = self.get_netrate(float(cny_buy_ad['temp_price']), float(usd_sell_ad['temp_price']))
             print "@time:", datetime.datetime.utcnow()
-            print "USD sell:", usd_sell_ad['temp_price'], "max value:", usd_sell_ad['max_amount_available'], "CNY sell:", cny_sell_ad['temp_price'], "max value:", cny_sell_ad['max_amount_available'], "CNY buy:", cny_buy_ad['temp_price'],"max value:", cny_buy_ad['max_amount_available']
+            print "USD sell:", usd_sell_ad['temp_price'], "max value:", usd_sell_ad['max_amount_available'], "CNY sell:", cny_sell_ad['temp_price'], "max value:", cny_sell_ad['max_amount_available'], "CNY buy:", cny_buy_ad['temp_price'],"max value:", cny_buy_ad['max_amount_available'], "C2U rate:", c2u, "C2U netrate:", c2u_net
             items = {'USD':
                      {'sell':
                       {'price':float(usd_sell_ad['temp_price']),'max_amount':int(usd_sell_ad['max_amount_available'])}},
@@ -98,7 +100,12 @@ class Monitor:
                      {'sell':
                       {'price':float(cny_sell_ad['temp_price']),'max_amount':int(cny_sell_ad['max_amount_available'])},
                       'buy':
-                      {'price':float(cny_buy_ad['temp_price']),'max_amount':int(cny_buy_ad['max_amount_available'])}}}
+                      {'price':float(cny_buy_ad['temp_price']),'max_amount':int(cny_buy_ad['max_amount_available'])}},
+                     'rate':
+                     {'C2U':c2u},
+                     'net_rate':
+                     {'C2U':c2u_net}
+                     }
             with XlsxProcessor() as xlsm:
                 xlsm.add_to_xlsx(items)
 
@@ -111,8 +118,19 @@ class Monitor:
         except NoDataException as e:
             print "Exception:", e.message
         finally:
-            threading.Timer(20, self.check_value).start()
-        
+            threading.Timer(600, self.check_value).start()
+    
+    @staticmethod
+    def get_rate(price1, price2):
+        """Using direct quotation"""
+        return price1 / price2
+
+    @staticmethod
+    def get_netrate(price1, price2, amount = 0.01):
+        """Using direct quotation"""
+        pr2_fee_perc = 0.044
+        pr2_fee_cons = 0.3
+        return (price1 * amount) / (price2 * amount * (1 - pr2_fee_perc) - pr2_fee_cons)
 
     def start(self):
         """Start the main loop"""

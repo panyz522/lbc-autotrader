@@ -13,11 +13,9 @@ class XlsxProcessor(object):
         else:
             self.wb = Workbook()
             self.ws = self.wb.active
-            self.ws['a1'] = 'Time'
-            self.ws['b1'] = 'USD-sell price'
-            self.ws['c1'] = self.ws['e1'] = self.ws['g1'] = 'amount'
-            self.ws['d1'] = 'CNY-sell price'
-            self.ws['f1'] = 'CNY-buy price'
+            self.row = 1
+            self.crt_col = 1
+            self.write( 'Time', 'USD-sell price', 'Amount', 'CNY-sell price', 'Amount', 'CNY-buy price', 'Amount', 'CNY-USD rate', 'CNY-USD netrate')
         self.ws = self.wb.active
         self.row = self.ws.max_row + 1
         self.crt_col = 1
@@ -41,7 +39,9 @@ class XlsxProcessor(object):
                    items['CNY']['sell']['price'],
                    items['CNY']['sell']['max_amount'],
                    items['CNY']['buy']['price'],
-                   items['CNY']['buy']['max_amount'])
+                   items['CNY']['buy']['max_amount'],
+                   items['rate']['C2U'],
+                   items['net_rate']['C2U'])
         self.crt_col = 27
         self.write(datetime.datetime.utcnow().strftime("%Y/%m/%d %H:%M:%S"))
 
