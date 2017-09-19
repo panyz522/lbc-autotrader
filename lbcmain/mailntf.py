@@ -57,6 +57,9 @@ class MailBuilder:
             self.attachment.append("./output.xlsx")
         self.is_body_built = True
 
+    def build_body_by():
+        pass # TODO
+
     def send(self):
         if self.is_body_built:
             if platform.system() == "Windows":
@@ -66,6 +69,4 @@ class MailBuilder:
             return True
         else:
             return False
-
-#send_mail('root@tur.tancoder.com', '250224740@qq.com', 'A Test', 'test', ['./Vim_keys.jpg'])
 

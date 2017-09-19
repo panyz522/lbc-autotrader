@@ -14,6 +14,8 @@ class Monitor:
         self.__conn = api.hmac(self.__hmac_key, self.__hmac_secret)
         # Set email notification time
         self.set_reporttime()
+        # Set optimal rate status
+        self.__optrate = {'rate':6.3, 'time':datetime.datetime.utcnow()-datetime.timedelta(hours=1)}
 
     def set_reporttime(self, hour = 22, minute = 0, tmz = 'Asia/Shanghai'):
         dt_bj = datetime.datetime(2017, 1, 1, hour, minute, tzinfo = pytz.timezone(tmz))
@@ -83,35 +85,64 @@ class Monitor:
         else:
             return self.get_min_value(cny_sell_ad_wechat, cny_sell_ad_alipay)
 
+    def refine_output(self, cny_buy_ad, cny_sell_ad, usd_sell_ad):
+        c2u = self.get_rate(float(cny_buy_ad['temp_price']), float(usd_sell_ad['temp_price']))
+        c2u_net = self.get_netrate(float(cny_buy_ad['temp_price']), float(usd_sell_ad['temp_price']))
+        items = {'USD':
+                 {'sell':
+                  {'price':float(usd_sell_ad['temp_price']),
+                   'min_amount':int(usd_sell_ad['min_amount']),
+                   'max_amount':int(usd_sell_ad['max_amount_available'])}},
+                 'CNY':
+                 {'sell':
+                  {'price':float(cny_sell_ad['temp_price']),
+                   'min_amount':int(cny_sell_ad['min_amount']),
+                   'max_amount':int(cny_sell_ad['max_amount_available'])},
+                  'buy':
+                  {'price':float(cny_buy_ad['temp_price']),
+                   'min_amount':int(cny_buy_ad['min_amount']),
+                   'max_amount':int(cny_buy_ad['max_amount_available'])}},
+                 'rate':
+                 {'C2U':c2u},
+                 'net_rate':
+                 {'C2U':c2u_net},
+                 }
+        c2u_avl = self.get_avl_amount(items['CNY']['buy']['min_amount'], items['CNY']['buy']['max_amount'], 
+                                      items['USD']['sell']['min_amount'], items['USD']['sell']['max_amount'],
+                                      items['CNY']['buy']['price'], items['USD']['sell']['price'])
+        items['available'] = {'C2U': c2u_avl}
+        return items
+
     def check_value(self):
         """The main loop"""
         try:
             usd_sell_ad = self.usd_best_ad('sell')
             cny_sell_ad = self.cny_best_ad('sell')
             cny_buy_ad = self.cny_best_ad( 'buy')
-            c2u = self.get_rate(float(cny_buy_ad['temp_price']), float(usd_sell_ad['temp_price']))
-            c2u_net = self.get_netrate(float(cny_buy_ad['temp_price']), float(usd_sell_ad['temp_price']))
+            items = self.refine_output(cny_buy_ad, cny_sell_ad, usd_sell_ad)
             print "@time:", datetime.datetime.utcnow()
-            print "USD sell:", usd_sell_ad['temp_price'], "max value:", usd_sell_ad['max_amount_available'], "CNY sell:", cny_sell_ad['temp_price'], "max value:", cny_sell_ad['max_amount_available'], "CNY buy:", cny_buy_ad['temp_price'],"max value:", cny_buy_ad['max_amount_available'], "C2U rate:", c2u, "C2U netrate:", c2u_net
-            items = {'USD':
-                     {'sell':
-                      {'price':float(usd_sell_ad['temp_price']),'max_amount':int(usd_sell_ad['max_amount_available'])}},
-                     'CNY':
-                     {'sell':
-                      {'price':float(cny_sell_ad['temp_price']),'max_amount':int(cny_sell_ad['max_amount_available'])},
-                      'buy':
-                      {'price':float(cny_buy_ad['temp_price']),'max_amount':int(cny_buy_ad['max_amount_available'])}},
-                     'rate':
-                     {'C2U':c2u},
-                     'net_rate':
-                     {'C2U':c2u_net}
-                     }
+            print "USD sell:", usd_sell_ad['temp_price'], "max value:", usd_sell_ad['max_amount_available'], "CNY sell:", cny_sell_ad['temp_price'], "max value:", cny_sell_ad['max_amount_available'], "CNY buy:", cny_buy_ad['temp_price'],"max value:", cny_buy_ad['max_amount_available'], "C2U rate:", items['rate']['C2U'], "C2U netrate:", items['net_rate']['C2U'], "Available in CNY", items['available']['C2U']['inAd1']
+            
+            # Log to xlsx
             with XlsxProcessor() as xlsm:
                 xlsm.add_to_xlsx(items)
 
+            # Send notification
+            rate = items['net_rate']['C2U']
+            amount = items['available']['C2U']['inAd1'][1]
+            if rate < self.__optrate['rate'] and amount > 500:
+                mail = MailBuilder(type = MailType.NOTIFY)
+                mail.build_body("Current transter rate of CNY->USD: " + str(rate) + " with maximun amount: " + str(amount))
+                mail.send()
+                self.__optrate['rate'] = rate
+                self.__optrate['time'] = datetime.datetime.utcnow()
+            elif datetime.datetime.utcnow() > self.__optrate['time'] + datetime.timedelta(hours = 1):
+                self.__optrate['rate'] = 6.3
+
+            # Send report
             if datetime.datetime.utcnow() >= self.report_time:
-                mail = MailBuilder(type = MailType.REPORT)
                 self.report_time = self.report_time + datetime.timedelta(days = 1)
+                mail = MailBuilder(type = MailType.REPORT)
                 mail.build_body()
                 mail.send()
 
@@ -131,6 +162,23 @@ class Monitor:
         pr2_fee_perc = 0.044
         pr2_fee_cons = 0.3
         return (price1 * amount) / (price2 * amount * (1 - pr2_fee_perc) - pr2_fee_cons)
+
+    @staticmethod
+    def get_avl_amount(ad1min, ad1max, ad2min, ad2max, ad1rate, ad2rate):
+        min1 = ad1min / ad1rate
+        min2 = ad2min / ad2rate
+        max1 = ad1max / ad1rate
+        max2 = ad2max / ad2rate
+        if min1 <= max2 and max1 >= min2:
+            minamount = max(min1, min2)
+            maxamount = min(max1, max2)
+            return {'inBTC': [minamount,maxamount], 
+                    'inAd1': [minamount* ad1rate,maxamount* ad1rate] , 
+                    'inAd2': [minamount* ad2rate,maxamount* ad2rate]}
+        else:
+            return {'inBTC': [0,0], 
+                    'inAd1': [0,0] , 
+                    'inAd2': [0,0]}
 
     def start(self):
         """Start the main loop"""
