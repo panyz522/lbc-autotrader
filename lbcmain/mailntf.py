@@ -10,7 +10,7 @@ class MailType:
     REPORT = 2
 
 def send_mail(send_from, send_to, subject, text, files=None, server="localhost"):
-
+    """Use smtp to send email"""
     msg = MIMEMultipart()
     msg['From'] = send_from
     msg['To'] = send_to
@@ -35,6 +35,7 @@ def send_mail(send_from, send_to, subject, text, files=None, server="localhost")
     smtp.close()
 
 class MailBuilder:
+    """MailBuilder build and send email"""
     def __init__(self, send_from = 'root@tur.tancoder.com', send_to = '250224740@qq.com', type = MailType.NOTIFY):
         self.send_from = send_from
         self.send_to = send_to
@@ -43,12 +44,14 @@ class MailBuilder:
         self.is_body_built = False
     
     def build_subject(self):
+        """Put email subject according to email type, usually don't need to directly execute"""
         if self.type == MailType.NOTIFY:
             self.subject = 'EMERGENCY Infomation From LocalBitcoin'
         elif self.type == MailType.REPORT:
             self.subject = 'Daily Report From LocalBitcoin'
 
     def build_body(self, text = ''):
+        """Build context and attachment according to input text and mail type"""
         self.attachment = []
         if self.type == MailType.NOTIFY:
             self.body_text = 'Hi,\n\nYou need to take care of the following infomation:\n\n' + text
@@ -61,6 +64,7 @@ class MailBuilder:
         pass # TODO
 
     def send(self):
+        """Send email if this program running on Linux or print a message"""
         if self.is_body_built:
             if platform.system() == "Windows":
                 print 'send mail: ', self.send_from, self.send_to, self.subject, self.body_text, self.attachment

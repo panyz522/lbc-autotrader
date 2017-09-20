@@ -13,8 +13,8 @@ class XlsxProcessor(object):
         else:
             self.wb = Workbook()
             self.ws = self.wb.active
-            self.row = 1
-            self.crt_col = 1
+            self.row = 1 # current row
+            self.crt_col = 1 # current colomn
             self.write( 'Time', 
                        'USD-sell price', 'Amount', 
                        'CNY-sell price', 'Amount', 

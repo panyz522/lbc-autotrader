@@ -7,6 +7,7 @@ class Monitor:
     """Monitor deal with connection and loop"""
     def __init__(self):
         """Establish connection using keys.json file"""
+        # Get keys and establish connection
         with open('./keys.json') as f:
             keys = json.load(f)
         self.__hmac_key = keys["READ"]["key"]
@@ -18,9 +19,16 @@ class Monitor:
         self.__optrate = {'rate':6.3, 'time':datetime.datetime.utcnow()-datetime.timedelta(hours=1)}
 
     def set_reporttime(self, hour = 22, minute = 0, tmz = 'Asia/Shanghai'):
+        """Set daily report sending schedule according to hour:minite in speicific time zone
+        
+        You can get the list of timezone from pytz.all_timezones 
+        """
+        # Convert local target time to UTC time, get UTC current datetime, and combine UTC target time with UTC current date
         dt_bj = datetime.datetime(2017, 1, 1, hour, minute, tzinfo = pytz.timezone(tmz))
         dt_now = datetime.datetime.utcnow()
         dt_utc = datetime.datetime.combine(dt_now.date(), dt_bj.astimezone(pytz.utc).time())
+
+        # Check if current time is later than target time, if so add one more day
         if dt_now >= dt_utc:
             self.report_time = dt_utc + datetime.timedelta(days = 1)
         else:
@@ -46,14 +54,7 @@ class Monitor:
 
     @staticmethod
     def get_first_ad(ads):
-        """Get the first ad
-
-        Args: 
-            ads: Ads dictionary server returned
-
-        Returns: 
-            The first ad, always the best
-        """
+        """Get the first ad's data"""
         return ads[1]['data']
 
     @staticmethod
@@ -86,6 +87,11 @@ class Monitor:
             return self.get_min_value(cny_sell_ad_wechat, cny_sell_ad_alipay)
 
     def refine_output(self, cny_buy_ad, cny_sell_ad, usd_sell_ad):
+        """Convert ads to data dictionary
+        
+        Put useful information in each ad into a dictionary 
+        then calculate and add additional information to the dictionary
+        """
         c2u = self.get_rate(float(cny_buy_ad['temp_price']), float(usd_sell_ad['temp_price']))
         c2u_net = self.get_netrate(float(cny_buy_ad['temp_price']), float(usd_sell_ad['temp_price']))
         items = {'USD':
@@ -147,8 +153,10 @@ class Monitor:
                 mail.send()
 
         except NoDataException as e:
+            # Only deal with NoDataException here
             print "Exception:", e.message
         finally:
+            # Waiting for next loop
             threading.Timer(600, self.check_value).start()
     
     @staticmethod
@@ -165,6 +173,7 @@ class Monitor:
 
     @staticmethod
     def get_avl_amount(ad1min, ad1max, ad2min, ad2max, ad1rate, ad2rate):
+        """Get available simultaneous transaction amount"""
         min1 = ad1min / ad1rate
         min2 = ad2min / ad2rate
         max1 = ad1max / ad1rate
