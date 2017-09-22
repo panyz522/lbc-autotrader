@@ -1,0 +1,23 @@
+{
+    "monitor":{
+        // Time between two fetch loop in seconds
+        "interval": 600,
+        // Report time in specific timezone
+        "report_hours": 22,
+        "report_minutes": 0,
+        "report_tz": "Asia/Shanghai",
+        // Transaction fees (currently only set USD part of CNY->USD)
+        "fee_percent": 0.044,
+        "fee_constant": 0.3,
+        // Transaction threshold and reset time (in minutes) for notification.
+        // If trans rate is more profitable than the value, an email will be sent.
+        // (currently only set CNY->USD)
+        "trans_threshold": 6.3,
+        "reset_time": 60
+    },
+
+    "mail":{
+        // A list of recipients
+        "recipients": ["name@domain.com"]
+    }
+}

@@ -4,6 +4,7 @@ from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import COMMASPACE, formatdate
+from config import Config
 
 class MailType:
     NOTIFY = 1
@@ -36,9 +37,10 @@ def send_mail(send_from, send_to, subject, text, files=None, server="localhost")
 
 class MailBuilder:
     """MailBuilder build and send email"""
-    def __init__(self, send_from = 'root@tur.tancoder.com', send_to = '250224740@qq.com', type = MailType.NOTIFY):
-        self.send_from = send_from
-        self.send_to = send_to
+    def __init__(self, type = MailType.NOTIFY):
+        self.config = Config.get_mailconfig()
+        self.send_from = 'root@tur.tancoder.com'
+        self.send_to = Config["recipients"]
         self.type = type
         self.build_subject()
         self.is_body_built = False
@@ -69,7 +71,8 @@ class MailBuilder:
             if platform.system() == "Windows":
                 print 'send mail: ', self.send_from, self.send_to, self.subject, self.body_text, self.attachment
             else:
-                send_mail(self.send_from, self.send_to, self.subject, self.body_text, self.attachment)
+                for recipient in self.send_to:
+                    send_mail(self.send_from, recipient, self.subject, self.body_text, self.attachment)
             return True
         else:
             return False

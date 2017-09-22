@@ -1,6 +1,8 @@
 import datetime, platform, pytz
 from lbcmain.mailntf import MailBuilder, MailType
 from lbcmain.lbcmonitor import Monitor
+from lbcmain.config import Config
 
-print Monitor.get_avl_amount(1200, 1600, 12, 120, 1, 0.1)
+Config.readconfig()
+print Config.get_monitorconfig()
 

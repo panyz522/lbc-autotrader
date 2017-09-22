@@ -102,5 +102,6 @@ ENV/
 
 # personal stuff
 keys.json
+config.json
 *.xlsx
 .vs/

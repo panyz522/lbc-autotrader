@@ -22,6 +22,9 @@
     <Content Include="requirements.txt" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="lbcmain\config.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="lbcmain\lbcmonitor.py" />
     <Compile Include="lbcmain\mailntf.py">
       <SubType>Code</SubType>

@@ -1,12 +1,14 @@
 from lbcapi import api
 from xlsxproc import XlsxProcessor
 from mailntf import MailBuilder, MailType
+from config import Config
 import json, threading, time, os, datetime, pytz
 
 class Monitor:
     """Monitor deal with connection and loop"""
     def __init__(self):
         """Establish connection using keys.json file"""
+        self.config = Config.get_monitorconfig()
         # Get keys and establish connection
         with open('./keys.json') as f:
             keys = json.load(f)
@@ -14,9 +16,9 @@ class Monitor:
         self.__hmac_secret = keys["READ"]["secret"]
         self.__conn = api.hmac(self.__hmac_key, self.__hmac_secret)
         # Set email notification time
-        self.set_reporttime()
+        self.set_reporttime(self.config["report_hours"], self.config["report_minutes"], self.config["report_tz"])
         # Set optimal rate status
-        self.__optrate = {'rate':6.3, 'time':datetime.datetime.utcnow()-datetime.timedelta(hours=1)}
+        self.__optrate = {'rate':self.config["trans_threshold"], 'time':datetime.datetime.utcnow()-datetime.timedelta(hours=1)}
 
     def set_reporttime(self, hour = 22, minute = 0, tmz = 'Asia/Shanghai'):
         """Set daily report sending schedule according to hour:minite in speicific time zone
@@ -55,7 +57,10 @@ class Monitor:
     @staticmethod
     def get_first_ad(ads):
         """Get the first ad's data"""
-        return ads[1]['data']
+        try:
+            return ads[0]['data']
+        except IndexError as e:
+            return None;
 
     @staticmethod
     def get_max_value(ad1, ad2):
@@ -81,6 +86,10 @@ class Monitor:
         """Return best ad in CNY"""
         cny_sell_ad_wechat = self.get_first_ad(self.get_public_ads(sellorbuy, 'CNY', 'wechat'))
         cny_sell_ad_alipay = self.get_first_ad(self.get_public_ads(sellorbuy, 'CNY', 'alipay'))
+        if cny_sell_ad_wechat is None:
+            return cny_sell_ad_alipay
+        if cny_sell_ad_alipay is None:
+            return cny_sell_ad_wechat
         if sellorbuy == 'sell':
             return self.get_max_value(cny_sell_ad_wechat, cny_sell_ad_alipay)
         else:
@@ -93,31 +102,36 @@ class Monitor:
         then calculate and add additional information to the dictionary
         """
         c2u = self.get_rate(float(cny_buy_ad['temp_price']), float(usd_sell_ad['temp_price']))
-        c2u_net = self.get_netrate(float(cny_buy_ad['temp_price']), float(usd_sell_ad['temp_price']))
         items = {'USD':
                  {'sell':
                   {'price':float(usd_sell_ad['temp_price']),
                    'min_amount':int(usd_sell_ad['min_amount']),
-                   'max_amount':int(usd_sell_ad['max_amount_available'])}},
+                   'max_amount':self.get_maxint(usd_sell_ad['max_amount_available'])}},
                  'CNY':
                  {'sell':
                   {'price':float(cny_sell_ad['temp_price']),
                    'min_amount':int(cny_sell_ad['min_amount']),
-                   'max_amount':int(cny_sell_ad['max_amount_available'])},
+                   'max_amount':self.get_maxint(cny_sell_ad['max_amount_available'])},
                   'buy':
                   {'price':float(cny_buy_ad['temp_price']),
                    'min_amount':int(cny_buy_ad['min_amount']),
-                   'max_amount':int(cny_buy_ad['max_amount_available'])}},
+                   'max_amount':self.get_maxint(cny_buy_ad['max_amount_available'])}},
                  'rate':
                  {'C2U':c2u},
-                 'net_rate':
-                 {'C2U':c2u_net},
                  }
         c2u_avl = self.get_avl_amount(items['CNY']['buy']['min_amount'], items['CNY']['buy']['max_amount'], 
                                       items['USD']['sell']['min_amount'], items['USD']['sell']['max_amount'],
                                       items['CNY']['buy']['price'], items['USD']['sell']['price'])
+        c2u_net = self.get_netrate(float(cny_buy_ad['temp_price']), float(usd_sell_ad['temp_price']), c2u_avl['inBTC'][0])
         items['available'] = {'C2U': c2u_avl}
+        items['net_rate'] = {'C2U':c2u_net}
         return items
+
+    def get_maxint(self, str):
+        if str is None:
+            return 10000000
+        else:
+            return int(str)
 
     def check_value(self):
         """The main loop"""
@@ -136,14 +150,14 @@ class Monitor:
             # Send notification
             rate = items['net_rate']['C2U']
             amount = items['available']['C2U']['inAd1'][1]
-            if rate < self.__optrate['rate'] and amount > 500:
+            if rate < self.__optrate['rate'] and amount > self.config["min_amount"]:
                 mail = MailBuilder(type = MailType.NOTIFY)
                 mail.build_body("Current transter rate of CNY->USD: " + str(rate) + " with maximun amount: " + str(amount))
                 mail.send()
                 self.__optrate['rate'] = rate
                 self.__optrate['time'] = datetime.datetime.utcnow()
             elif datetime.datetime.utcnow() > self.__optrate['time'] + datetime.timedelta(hours = 1):
-                self.__optrate['rate'] = 6.3
+                self.__optrate['rate'] = self.config["trans_threshold"];
 
             # Send report
             if datetime.datetime.utcnow() >= self.report_time:
@@ -157,18 +171,17 @@ class Monitor:
             print "Exception:", e.message
         finally:
             # Waiting for next loop
-            threading.Timer(600, self.check_value).start()
+            threading.Timer(self.config["interval"], self.check_value).start()
     
     @staticmethod
     def get_rate(price1, price2):
         """Using direct quotation"""
         return price1 / price2
 
-    @staticmethod
-    def get_netrate(price1, price2, amount = 0.01):
+    def get_netrate(self, price1, price2, amount = 0.01):
         """Using direct quotation"""
-        pr2_fee_perc = 0.044
-        pr2_fee_cons = 0.3
+        pr2_fee_perc = self.config["fee_percent"]
+        pr2_fee_cons = self.config["fee_constant"]
         return (price1 * amount) / (price2 * amount * (1 - pr2_fee_perc) - pr2_fee_cons)
 
     @staticmethod

@@ -1,11 +1,13 @@
 certifi==2017.7.27.1
 chardet==3.0.4
+commentjson==0.6
 et-xmlfile==1.0.1
 idna==2.6
 jdcal==1.3
 lbcapi==1.0
 openpyxl==2.4.8
 pip==9.0.1
+pytz==2017.2
 requests==2.18.4
 setuptools==28.8.0
 urllib3==1.22
