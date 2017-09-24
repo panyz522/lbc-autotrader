@@ -4,5 +4,7 @@ from lbcmain.lbcmonitor import Monitor
 from lbcmain.config import Config
 
 Config.readconfig()
-print Config.get_monitorconfig()
+mail = MailBuilder(type = MailType.REPORT)
+mail.build_body()
+mail.send()
 

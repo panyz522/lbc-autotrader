@@ -2,6 +2,7 @@ import os, commentjson
 
 class Config(object):
     """Set config of other class"""
+
     @classmethod
     def readconfig(cls):
         with open("./config.json") as file:
@@ -14,3 +15,5 @@ class Config(object):
     @classmethod
     def get_mailconfig(cls):
         return cls.configs["mail"]
+    
+

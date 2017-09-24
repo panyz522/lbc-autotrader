@@ -38,9 +38,9 @@ def send_mail(send_from, send_to, subject, text, files=None, server="localhost")
 class MailBuilder:
     """MailBuilder build and send email"""
     def __init__(self, type = MailType.NOTIFY):
-        self.config = Config.get_mailconfig()
+        self.configs = Config.get_mailconfig()
         self.send_from = 'root@tur.tancoder.com'
-        self.send_to = Config["recipients"]
+        self.send_to = self.configs["recipients"]
         self.type = type
         self.build_subject()
         self.is_body_built = False
@@ -68,10 +68,10 @@ class MailBuilder:
     def send(self):
         """Send email if this program running on Linux or print a message"""
         if self.is_body_built:
-            if platform.system() == "Windows":
-                print 'send mail: ', self.send_from, self.send_to, self.subject, self.body_text, self.attachment
-            else:
-                for recipient in self.send_to:
+            for recipient in self.send_to:
+                if platform.system() == "Windows":
+                    print 'send mail: ', self.send_from, recipient, self.subject, self.body_text, self.attachment
+                else:
                     send_mail(self.send_from, recipient, self.subject, self.body_text, self.attachment)
             return True
         else:
