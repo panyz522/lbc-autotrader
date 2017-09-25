@@ -140,7 +140,7 @@ class Monitor:
             cny_sell_ad = self.cny_best_ad('sell')
             cny_buy_ad = self.cny_best_ad( 'buy')
             items = self.refine_output(cny_buy_ad, cny_sell_ad, usd_sell_ad)
-            print "@time:", datetime.datetime.utcnow()
+            print "[", datetime.datetime.utcnow(), "]",
             print "USD sell:", usd_sell_ad['temp_price'], "max value:", usd_sell_ad['max_amount_available'], "CNY sell:", cny_sell_ad['temp_price'], "max value:", cny_sell_ad['max_amount_available'], "CNY buy:", cny_buy_ad['temp_price'],"max value:", cny_buy_ad['max_amount_available'], "C2U rate:", items['rate']['C2U'], "C2U netrate:", items['net_rate']['C2U'], "Available in CNY", items['available']['C2U']['inAd1']
             
             # Log to xlsx

@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{a9ebfb50-d558-403d-83bf-4024089020f2}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>main.py</StartupFile>
+    <StartupFile>test.plot.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -34,6 +34,9 @@
     </Compile>
     <Compile Include="lbcmain\__init__.py" />
     <Compile Include="main.py" />
+    <Compile Include="test.plot.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="test.py">
       <SubType>Code</SubType>
     </Compile>

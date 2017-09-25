@@ -14,5 +14,8 @@
     "MONEY_PIN":{
         "key":"",
         "secret":""
+    },
+    "plotly":{
+        "key":"your_plotly_key_for_drawing"
     }
 }

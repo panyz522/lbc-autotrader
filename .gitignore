@@ -105,3 +105,4 @@ keys.json
 config.json
 *.xlsx
 .vs/
+doc/
