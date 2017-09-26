@@ -1,0 +1,30 @@
+{
+    "USD": {
+        "sell": {
+            "price": 0.1,
+            "min_amount": 1,
+            "max_amount": 1
+        }
+    },
+    "CNY": {
+        "sell": {
+            "price": 0.1,
+            "min_amount": 1,
+            "max_amount": 1
+        },
+        "buy": {
+            "price": 0.1,
+            "min_amount": 1,
+            "max_amount": 1
+        }
+    },
+    "rate": {
+        "C2U": 0.1
+    },
+    "net_rate": {
+        "C2U": 0.1
+    },
+    "available": {
+        "C2U": 0.1
+    }
+}

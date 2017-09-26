@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{a9ebfb50-d558-403d-83bf-4024089020f2}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>test.plot.py</StartupFile>
+    <StartupFile>main.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -23,6 +23,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="lbcmain\config.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="lbcmain\dataexplorer.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="lbcmain\lbcmonitor.py" />

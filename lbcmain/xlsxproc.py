@@ -2,12 +2,14 @@ import os, datetime
 from openpyxl import Workbook
 from openpyxl import load_workbook
 from openpyxl.worksheet import Worksheet
+from config import Config
 
 class XlsxProcessor(object):
     """XlsxProcesser maintain and update xlsm file to keep data"""
     
-    def __init__(self, file_name = "output.xlsx"):
-        self.file_path = './' + file_name
+    def __init__(self):
+        self.config = Config.get_xlsxconfig()
+        self.file_path = os.path.join(self.config['path'],'doc',self.config['filename'])
         if os.path.isfile(self.file_path):
             self.wb = load_workbook(self.file_path)
         else:

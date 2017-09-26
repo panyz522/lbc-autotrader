@@ -7,13 +7,26 @@ class Config(object):
     def readconfig(cls):
         with open("./config.json") as file:
             cls.configs = commentjson.load(file)
+    
+    @classmethod
+    def setpath(cls, path):
+        cls.path = path
+
+    @classmethod
+    def insertpath(cls, config):
+        config['path'] = cls.path
+        return config
 
     @classmethod
     def get_monitorconfig(cls):
-        return cls.configs["monitor"]
+        return cls.insertpath(cls.configs["monitor"])
 
     @classmethod
     def get_mailconfig(cls):
-        return cls.configs["mail"]
+        return cls.insertpath(cls.configs["mail"])
+
+    @classmethod
+    def get_xlsxconfig(cls):
+        return cls.insertpath(cls.configs["xlsx"])
     
 
