@@ -49,7 +49,7 @@ class MailBuilder:
                 if platform.system() == "Windows":
                     print 'send mail: ', self.send_from, recipient, self.subject, self.body_text, self.attachment
                 else:
-                    send_mail(self.send_from, recipient, self.subject, self.body_text, self.attachment)
+                    self.send_mail(self.send_from, recipient, self.subject, self.body_text, self.attachment)
             return True
         else:
             return False

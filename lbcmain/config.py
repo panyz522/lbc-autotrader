@@ -28,5 +28,9 @@ class Config(object):
     @classmethod
     def get_xlsxconfig(cls):
         return cls.insertpath(cls.configs["xlsx"])
+
+    @classmethod
+    def get_dataconfig(cls):
+        return cls.insertpath(cls.configs["data"])
     
 

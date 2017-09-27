@@ -13,11 +13,22 @@
         // If trans rate is more profitable than the value, an email will be sent.
         // (currently only set CNY->USD)
         "trans_threshold": 6.3,
-        "reset_time": 60
+        "reset_time": 60,
+        // Minimum transaction amount for notification.
+        // Only notify when the maximum transaction amount is larger than the value
+        // (currently only in CNY)
+        "min_amount": 500
     },
-
+    
     "mail":{
         // A list of recipients
-        "recipients": ["name@domain.com"]
+        "recipients": ["email1", "email2"]
+    },
+
+    "xlsx":{
+        "filename": "output.xlsx"
+    },
+
+    "data":{
     }
 }
