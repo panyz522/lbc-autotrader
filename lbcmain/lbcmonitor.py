@@ -170,8 +170,7 @@ class Monitor:
             # Only deal with NoDataException here
             print "Exception:", e.message
         finally:
-            # Waiting for next loop
-            threading.Timer(self.config["interval"], self.check_value).start()
+            pass
     
     @staticmethod
     def get_rate(price1, price2):
@@ -204,7 +203,17 @@ class Monitor:
 
     def start(self):
         """Start the main loop"""
-        self.check_value()
+        self.stop()
+        self.timer = MonitorTimer(self.check_value, self.config['interval'])
+        self.timer.start()
+
+    def stop(self):
+        """Stop the main loop"""
+        try:
+            if self.timer.is_alive():
+                self.timer.stop()
+        except AttributeError:
+            pass
 
 class NoDataException(Exception):
     """NoDataException raised if lbcapi returned an error data"""
@@ -212,3 +221,18 @@ class NoDataException(Exception):
         self.message = message
     def __str__(self):
         return repr(self.message)
+
+class MonitorTimer(threading.Thread):
+    def __init__(self, loopmethod, waitingtime):
+        threading.Thread.__init__(self)
+        self.event = threading.Event()
+        self.loopmethod = loopmethod
+        self.wait = waitingtime
+
+    def run(self):
+        while not self.event.is_set():
+            self.loopmethod()
+            self.event.wait(self.wait)
+
+    def stop(self):
+        self.event.set()

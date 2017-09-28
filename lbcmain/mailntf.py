@@ -54,8 +54,7 @@ class MailBuilder:
         else:
             return False
 
-    @staticmethod
-    def send_mail(send_from, send_to, subject, text, files=None, server="localhost"):
+    def send_mail(self, send_from, send_to, subject, text, files=None, server="localhost"):
         """Use smtp to send email"""
         msg = MIMEMultipart()
         msg['From'] = send_from

@@ -17,7 +17,7 @@ with open("test.json", 'w') as f:
 
 with open("test.json", 'r') as f:
     dataread = json.load(f)
-    for key, value in dataread.iteritems():
+    for key, value in dataread.items():
         print datetime.datetime.strptime(key, '%Y/%m/%d %H:%M:%S').year
         print value
         print ""
