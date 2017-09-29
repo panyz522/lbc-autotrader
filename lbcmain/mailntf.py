@@ -64,15 +64,15 @@ class MailBuilder:
 
         msg.attach(MIMEText(text))
 
-        for f in files or []:
-            filepath = os.path.join(self.config['path'],'doc',f)
-            with open(f, "rb") as fil:
+        for fbasename in files or []:
+            filepath = os.path.join(self.config['path'],'doc',fbasename)
+            with open(filepath, "rb") as fil:
                 part = MIMEApplication(
                     fil.read(),
-                    Name=basename(f)
+                    Name=fbasename
                 )
             # After the file is closed
-            part['Content-Disposition'] = 'attachment; filename="%s"' % basename(f)
+            part['Content-Disposition'] = 'attachment; filename="%s"' % fbasename
             msg.attach(part)
 
 

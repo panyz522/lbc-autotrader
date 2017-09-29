@@ -1,5 +1,6 @@
 from lbcapi import api
 from xlsxproc import XlsxProcessor
+from dataexplorer import DataExplorer
 from mailntf import MailBuilder, MailType
 from config import Config
 import json, threading, time, os, datetime, pytz
@@ -105,16 +106,16 @@ class Monitor:
         items = {'USD':
                  {'sell':
                   {'price':float(usd_sell_ad['temp_price']),
-                   'min_amount':int(usd_sell_ad['min_amount']),
+                   'min_amount':self.get_minint(usd_sell_ad['min_amount']),
                    'max_amount':self.get_maxint(usd_sell_ad['max_amount_available'])}},
                  'CNY':
                  {'sell':
                   {'price':float(cny_sell_ad['temp_price']),
-                   'min_amount':int(cny_sell_ad['min_amount']),
+                   'min_amount':self.get_minint(cny_sell_ad['min_amount']),
                    'max_amount':self.get_maxint(cny_sell_ad['max_amount_available'])},
                   'buy':
                   {'price':float(cny_buy_ad['temp_price']),
-                   'min_amount':int(cny_buy_ad['min_amount']),
+                   'min_amount':self.get_minint(cny_buy_ad['min_amount']),
                    'max_amount':self.get_maxint(cny_buy_ad['max_amount_available'])}},
                  'rate':
                  {'C2U':c2u},
@@ -128,8 +129,16 @@ class Monitor:
         return items
 
     def get_maxint(self, str):
+        """for max_amount"""
         if str is None:
             return 10000000
+        else:
+            return int(str)
+
+    def get_minint(self, str):
+        """for min_amount"""
+        if str is None:
+            return 0
         else:
             return int(str)
 
@@ -140,12 +149,17 @@ class Monitor:
             cny_sell_ad = self.cny_best_ad('sell')
             cny_buy_ad = self.cny_best_ad( 'buy')
             items = self.refine_output(cny_buy_ad, cny_sell_ad, usd_sell_ad)
-            print "[", datetime.datetime.utcnow(), "]",
+            itemtime = datetime.datetime.utcnow()
+            print "[", itemtime, "]",
             print "USD sell:", usd_sell_ad['temp_price'], "max value:", usd_sell_ad['max_amount_available'], "CNY sell:", cny_sell_ad['temp_price'], "max value:", cny_sell_ad['max_amount_available'], "CNY buy:", cny_buy_ad['temp_price'],"max value:", cny_buy_ad['max_amount_available'], "C2U rate:", items['rate']['C2U'], "C2U netrate:", items['net_rate']['C2U'], "Available in CNY", items['available']['C2U']['inAd1']
             
             # Log to xlsx
             with XlsxProcessor() as xlsm:
                 xlsm.add_to_xlsx(items)
+
+            # Log to json
+            with DataExplorer(index = 'testindex') as exp:
+                exp.add_item(itemtime, items)
 
             # Send notification
             rate = items['net_rate']['C2U']
