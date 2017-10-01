@@ -1,6 +1,12 @@
 import plotly.plotly as py
 import plotly.graph_objs as go
-import json, numpy
+import json, numpy, os
+from lbcmain.dataexplorer import DataExplorer
+from lbcmain.config import Config
+
+
+Config.readconfig()
+Config.setpath(os.path.dirname(os.path.abspath(__file__)))
 
 def draw():
     with open('./keys.json') as f:
@@ -8,10 +14,11 @@ def draw():
     py.sign_in('panyz522', keys['plotly']['key'])
 
     N = 100
-    data_x = numpy.linspace(0,1,N)
-    data_y = numpy.random.randn(N) + 30
+    with DataExplorer(index = 'saved') as datafile:
+        date, data_rate = datafile.get_field('rate', 'C2U')
 
-    trace = go.Scatter(x = data_x, y = data_y, mode = 'lines', name = 'test-data')
+
+    trace = go.Scatter(x = date, y = data_rate, mode = 'lines', name = 'test-data')
     data = [trace]
     layout = go.Layout(title='Test Plot', 
                        xaxis = dict(title = 'xvalue',
@@ -19,8 +26,7 @@ def draw():
                                     showline = True), 
                        yaxis = dict(title = 'yvalue', 
                                     zeroline = False,
-                                    showline = True,
-                                    rangemode = "tozero"), 
+                                    showline = True), 
                        width=800, 
                        height=640)
     fig = go.Figure(data=data, layout=layout)
