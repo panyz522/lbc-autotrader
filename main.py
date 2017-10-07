@@ -3,8 +3,8 @@ from lbcmain.config import Config
 from lbcmain.cmdcontrol import Command
 import os
 
+Config.setpath(os.path.dirname(os.path.abspath(__file__)))
 Config.readconfig()
-Config.path = os.path.dirname(os.path.abspath(__file__))
 monitor = Monitor()
 monitor.start()
 cmd = Command(monitor)

@@ -5,7 +5,7 @@ class Config(object):
 
     @classmethod
     def readconfig(cls):
-        with open("./config.json") as file:
+        with open(os.path.join(cls.path,"config.json")) as file:
             cls.configs = commentjson.load(file)
     
     @classmethod
